@@ -11,27 +11,27 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 1317384655) do
+ActiveRecord::Schema.define(:version => 1317384656) do
 
   create_table "branches", :force => true do |t|
     t.string   "name",          :null => false
     t.integer  "repository_id", :null => false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at",    :null => false
+    t.datetime "updated_at",    :null => false
   end
 
   add_index "branches", ["name", "repository_id"], :name => "index_branches_on_name_and_repository_id", :unique => true
 
   create_table "builds", :force => true do |t|
-    t.boolean  "green",                            :default => false
+    t.boolean  "green",        :default => false
     t.string   "url"
-    t.string   "compare",                                             :null => false
+    t.string   "compare",                         :null => false
     t.datetime "started_at"
     t.datetime "completed_at"
-    t.integer  "commit_id",                                           :null => false
-    t.integer  "branch_id",                                           :null => false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.integer  "commit_id",                       :null => false
+    t.integer  "branch_id",                       :null => false
+    t.datetime "created_at",                      :null => false
+    t.datetime "updated_at",                      :null => false
     t.text     "output"
     t.integer  "room_id"
     t.string   "user"
@@ -51,27 +51,42 @@ ActiveRecord::Schema.define(:version => 1317384655) do
     t.string   "author",        :null => false
     t.datetime "committed_at"
     t.integer  "repository_id", :null => false
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at",    :null => false
+    t.datetime "updated_at",    :null => false
     t.string   "url",           :null => false
   end
 
   add_index "commits", ["sha1", "repository_id"], :name => "index_commits_on_sha1_and_repository_id", :unique => true
 
+  create_table "providers", :force => true do |t|
+    t.string   "name",         :null => false
+    t.string   "base_url",     :null => false
+    t.string   "module_name",  :null => false
+    t.string   "hubot_prefix"
+    t.datetime "created_at",   :null => false
+    t.datetime "updated_at",   :null => false
+  end
+
+  add_index "providers", ["base_url"], :name => "index_providers_on_base_url", :unique => true
+  add_index "providers", ["hubot_prefix"], :name => "index_providers_on_hubot_prefix", :unique => true
+  add_index "providers", ["name"], :name => "index_providers_on_name", :unique => true
+
   create_table "repositories", :force => true do |t|
     t.string   "name",                             :null => false
     t.string   "uri",                              :null => false
     t.integer  "room_id"
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.datetime "created_at",                       :null => false
+    t.datetime "updated_at",                       :null => false
     t.boolean  "enabled",        :default => true, :null => false
     t.string   "hook_url"
     t.integer  "github_team_id"
     t.string   "job_template"
+    t.integer  "provider_id"
   end
 
   add_index "repositories", ["enabled"], :name => "index_repositories_on_enabled"
   add_index "repositories", ["name"], :name => "index_repositories_on_name", :unique => true
+  add_index "repositories", ["provider_id"], :name => "index_repositories_on_provider_id"
   add_index "repositories", ["uri"], :name => "index_repositories_on_uri"
 
 end

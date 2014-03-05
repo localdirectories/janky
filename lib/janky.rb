@@ -16,6 +16,7 @@ require "tilt"
 require "broach"
 require "sinatra/auth/github"
 
+require "janky/provider"
 require "janky/repository"
 require "janky/branch"
 require "janky/commit"
@@ -296,5 +297,5 @@ module Janky
     Janky::ChatService.adapters[name] = service
   end
 
-  register_chat_service "campfire", ChatService::Campfire
+  #register_chat_service "campfire", ChatService::Campfire
 end

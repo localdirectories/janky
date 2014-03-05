@@ -3,6 +3,7 @@ module Janky
     has_many :branches, :dependent => :destroy
     has_many :commits, :dependent => :destroy
     has_many :builds, :through => :branches
+    belongs_to :provider
 
     replicate_associations :builds, :commits, :branches
 
@@ -13,17 +14,25 @@ module Janky
         raise ArgumentError, "nwo can't be nil"
       end
 
+      if prefix = (nwo[/([a-zA-Z0-9\-_]+)\.[a-zA-Z0-9\-_]+[\/:][a-zA-Z0-9\-_]+/] && $1)
+        provider = Janky::Provider.find_by_hubot_prefix(prefix)
+        raise ArgumentError, "provider for prefix #{prefix} cannot be found" if provider.nil?
+        nwo.gsub!(/#{prefix}\./, '')
+      else
+        provider = Janky::Provider.find_by_name('GitHub')
+      end
+
       if repo = Repository.find_by_name(nwo)
         repo.update_attributes!(:job_template => template)
         repo.setup
         return repo
       end
 
-      repo = GitHub.repo_get(nwo)
+      repo = provider.module.repo_get(nwo)
       return if !repo
 
-      uri    = repo["private"] ? repo["ssh_url"] : repo["git_url"]
-      name ||= repo["name"]
+      uri    = repo['uri']
+      name ||= repo['name']
       uri.gsub!(/\.git$/, "")
 
       repo =
@@ -114,9 +123,10 @@ module Janky
     #   => "https://github.com/github/janky/issues"
     #
     # Returns the URL as a String.
-    def github_url(path)
-      "#{GitHub.github_url}/#{nwo}/#{path}"
+    def provider_url(path)
+      "#{provider.base_url}/#{nwo}/#{path}"
     end
+    alias_method :github_url, :provider_url
 
     # Name of the Campfire room receiving build notifications.
     #
@@ -143,8 +153,8 @@ module Janky
     #
     # Returns nothing.
     def setup_hook
-      if !hook_url || !GitHub.hook_exists?(hook_url)
-        url = GitHub.hook_create("#{github_owner}/#{github_name}")
+      if !hook_url || !provider.module.hook_exists?(hook_url)
+        url = provider.module.hook_create("#{github_owner}/#{github_name}")
         update_attributes!(:hook_url => url)
       end
     end

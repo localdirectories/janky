@@ -11,11 +11,11 @@ module Janky
     #
     # Returns nothing.
     def self.setup(user, password, secret, hook_url, api_url, git_host)
-      @user = user
+      @user     = user
       @password = password
-      @secret = secret
+      @secret   = secret
       @hook_url = hook_url
-      @api_url = api_url
+      @api_url  = api_url
       @git_host = git_host
     end
 
@@ -51,7 +51,11 @@ module Janky
 
       case response.code
       when "200"
-        Yajl.load(response.body)
+        ret         = {}
+        repo        = Yajl.load(response.body)
+        ret['uri']  = repo["private"] ? repo["ssh_url"] : repo["git_url"]
+        ret['name'] = repo['name']
+        ret
       when "403", "404"
         nil
       else
@@ -105,7 +109,17 @@ module Janky
         raise Error, "Failed to get commit"
       end
 
-      Yajl.load(response.body)
+      ret            = {}
+      commit         = Yajl.load(response.body)
+      ret['message'] = commit["commit"]["message"]
+      author_data    = commit["commit"]["author"]
+      ret['author']  =
+        if email = author_data["email"]
+          "#{author_data["name"]} <#{email}>"
+        else
+          author_data["name"]
+        end
+      ret
     end
 
     # Create a Post-Receive hook for the given repository.

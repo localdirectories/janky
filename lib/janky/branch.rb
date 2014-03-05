@@ -87,30 +87,26 @@ module Janky
     #
     # Returns the newly created Janky::Build.
     def head_build_for(room_id, user)
-      sha_to_build = GitHub.branch_head_sha(repository.nwo, name)
+      sha_to_build = repository.provider.module.branch_head_sha(repository.nwo, name)
       return if !sha_to_build
 
-      commit_data = GitHub.commit(repository.nwo, sha_to_build)
-      commit_message = commit_data["commit"]["message"]
-      commit_url = repository.github_url("commit/#{sha_to_build}")
-      author_data = commit_data["commit"]["author"]
-      commit_author =
-        if email = author_data["email"]
-          "#{author_data["name"]} <#{email}>"
-        else
-          author_data["name"]
-        end
+      commit_data    = repository.provider.module.commit(repository.nwo, sha_to_build)
+      commit_message = commit_data['message']
+      commit_author  = commit_data['author']
+      commit_url     = repository.provider_url("commit/#{sha_to_build}")
 
-      commit = repository.commit_for({
-        :repository => repository,
-        :sha1 => sha_to_build,
-        :author => commit_author,
-        :message => commit_message,
-        :url => commit_url,
-      })
+      commit = repository.commit_for(
+        {
+          :repository => repository,
+          :sha1       => sha_to_build,
+          :author     => commit_author,
+          :message    => commit_message,
+          :url        => commit_url,
+        }
+      )
 
       current_sha = current_build ? current_build.sha1 : "#{sha_to_build}^"
-      compare_url = repository.github_url("compare/#{current_sha}...#{commit.sha1}")
+      compare_url = repository.provider_url("compare/#{current_sha}...#{commit.sha1}")
       build_for(commit, user, room_id, compare_url)
     end
 
