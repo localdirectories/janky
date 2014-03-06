@@ -26,7 +26,11 @@ module Janky
       end
 
       def output
-        @build.output
+        if defined?(Ansi2html)
+          Ansi2html::convert(@build.output)
+        else
+          @build.output
+        end
       end
 
       def jenkins_url
