@@ -37,10 +37,10 @@ module Janky
 
       repo =
         if repo = Repository.find_by_name(name)
-          repo.update_attributes!(:uri => uri, :job_template => template)
+          repo.update_attributes!(:uri => uri, :job_template => template, provider: provider)
           repo
         else
-          Repository.create!(:name => name, :uri => uri, :job_template => template)
+          Repository.create!(:name => name, :uri => uri, :job_template => template, provider: provider)
         end
 
       repo.setup
